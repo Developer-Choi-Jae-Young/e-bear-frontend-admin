@@ -2,6 +2,7 @@ import "./NoticePage.css";
 import SideNavigation from "../components/SideNavigation";
 import Header from "../components/Header";
 import DataTable from "../components/DataTable";
+import { href } from "react-router-dom";
 
 const generateDummyRows = (count) => {
     const data = [];
@@ -118,7 +119,7 @@ const NoticePage = () => {
         // <span className="notice-main-section-title">공지사항</span>
         //             <hr />
         <div className="notice-main-section-table">
-            <DataTable pageInfo={pageInfo} headCells={headCells} rows={rows} searchConfig={searchConfig} labelConfig={labelConfig} />
+            <DataTable pageInfo={pageInfo} headCells={headCells} rows={rows} searchConfig={searchConfig} labelConfig={labelConfig} writeFunc={() => window.location.href='/admin/notice/write'} />
         </div>
     );
 };

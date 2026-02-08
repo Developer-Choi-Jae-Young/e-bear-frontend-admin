@@ -1,7 +1,17 @@
 import "./NoticeWrite.css";
 import Editor from "./Editor";
+import api from "../api/axios";
 
 const NoticeWrite = () => {
+    function onClickEvent() {
+        try {
+            // GET 요청 예시
+            const data = api.get('/write');
+        } catch (err) {
+            console.error("로딩 실패:", err);
+        }
+    }
+
     return (
         <>
             <div className="editor-container">
@@ -18,7 +28,7 @@ const NoticeWrite = () => {
                     {/* 버튼 영역 */}
                     <div className="editor-actions">
                         <button className="btn cancel">취소</button>
-                        <button className="btn submit">등록</button>
+                        <button onClick={onClickEvent} className="btn submit">등록</button>
                     </div>
                 </div>
             </div>
