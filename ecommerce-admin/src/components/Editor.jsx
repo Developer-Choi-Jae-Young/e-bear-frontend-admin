@@ -287,7 +287,7 @@ const MenuBar = ({ editor }) => {
     );
 };
 
-const Editor = () => {
+const Editor = ({ value = '', onChange }) => {
     const editor = useEditor({
         extensions: [
             StarterKit.configure({
@@ -310,7 +310,11 @@ const Editor = () => {
             TableRow,
             TableHeader,
             TableCell,
-        ]
+        ],
+        content: value,
+        onUpdate: ({ editor }) => {
+            onChange?.(editor.getHTML());
+        },
     });
 
     useEffect(() => { console.log(editor); console.log(editor.getAttributes('link')) }, [editor]);
