@@ -23,23 +23,24 @@ const SearchHeader = ({
     statusLabel,
     searchLabel,
     handleSearch,
-    onWriteClick
+    onWriteClick,
+    onDeleteClick
 }) => {
     return (
         <Box sx={{ p: 2, borderBottom: '1px solid #eee', display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-            
+
             {/* 날짜 */}
             {searchConfig.showDate && (
                 <>
-                    <DatePicker 
-                        label="시작일" value={startDate} 
-                        onChange={(newValue) => setStartDate(newValue)} 
+                    <DatePicker
+                        label="시작일" value={startDate}
+                        onChange={(newValue) => setStartDate(newValue)}
                         slotProps={{ textField: { size: 'small', sx: { width: 150 } } }}
                     />
                     <Typography variant="body1">~</Typography>
-                    <DatePicker 
-                        label="종료일" value={endDate} 
-                        onChange={(newValue) => setEndDate(newValue)} 
+                    <DatePicker
+                        label="종료일" value={endDate}
+                        onChange={(newValue) => setEndDate(newValue)}
                         slotProps={{ textField: { size: 'small', sx: { width: 150 } } }}
                     />
                 </>
@@ -71,16 +72,19 @@ const SearchHeader = ({
 
             {/* 검색어 입력창 */}
             {searchConfig.showText && (
-                <TextField 
-                    size="small" label="내용" placeholder='검색어 입력' 
-                    value={searchText} onChange={handleSearchTextChange} 
+                <TextField
+                    size="small" label="내용" placeholder='검색어 입력'
+                    value={searchText} onChange={handleSearchTextChange}
                 />
             )}
 
             <Button variant="outlined" onClick={handleSearch} sx={{ backgroundColor: '#000', color: 'white' }}>검색</Button>
-            
+
             <Box sx={{ ml: 'auto', display: 'flex', gap: 1 }}>
-                {searchConfig.showDelete && <Button variant="outlined" color="black">선택 삭제</Button>}
+                {searchConfig.showDelete &&
+                    <Button variant="outlined" color="black" onClick={onDeleteClick}>
+                        선택 삭제
+                    </Button>}
                 {searchConfig.showWrite && <Button variant="outlined" onClick={onWriteClick}>글쓰기</Button>}
                 {searchConfig.showDownload && <Button variant="outlined" color="success" >다운로드</Button>}
             </Box>

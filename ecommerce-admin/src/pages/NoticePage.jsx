@@ -73,35 +73,57 @@ const NoticePage = () => {
         searchLabel: "검색조건"
     };
 
+    const fetchNoticeList = async () => {
+        try {
+            setLoading(true);
+            setError("");
+
+            const response = await api.get("/list");
+
+            const mappedRows = response.map((item) => ({
+                num: item.notificationNo,
+                subject: item.title,
+                writer: item.writer,
+                regDt: item.regDt ? item.regDt.substring(0, 10) : "",
+                viewCnt: item.viewCnt,
+                notificationNo: item.notificationNo,
+            }));
+
+            setRows(mappedRows);
+        } catch (err) {
+            console.error("공지사항 목록 조회 실패:", err);
+            console.error("status:", err.response?.status);
+            console.error("data:", err.response?.data);
+            setError("공지사항 목록을 불러오지 못했습니다.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchNoticeList = async () => {
-            try {
-                setLoading(true);
-                setError("");
-
-                const response = await api.get("/list");
-
-                const mappedRows = response.map((item) => ({
-                    num: item.notificationNo,
-                    subject: item.title,
-                    writer: item.writer,
-                    regDt: item.regDt ? item.regDt.substring(0, 10) : "",
-                    viewCnt: item.viewCnt,
-                    notificationNo: item.notificationNo,
-                }));
-
-                setRows(mappedRows);
-            } catch (err) {
-                console.error("공지사항 목록 조회 실패:", err);
-                console.error("status:", err.response?.status);
-                console.error("data:", err.response?.data);
-                setError("공지사항 목록을 불러오지 못했습니다.");
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchNoticeList();
     }, []);
+
+    const handleDelete = async (selectedIds) => {
+        if (!selectedIds || selectedIds.length === 0) {
+            alert("삭제할 공지사항을 선택해주세요.");
+            return;
+        }
+
+        const confirmed = window.confirm("선택한 공지사항을 삭제하시겠습니까?");
+        if (!confirmed) return;
+
+        try {
+            await api.post("/delete", selectedIds);
+            alert("삭제되었습니다.");
+            fetchNoticeList();
+        } catch (err) {
+            console.error("공지사항 삭제 실패:", err);
+            console.error("status:", err.response?.status);
+            console.error("data:", err.response?.data);
+            alert("삭제 중 오류가 발생했습니다.");
+        }
+    };
 
     if (loading) {
         return <div className="notice-main-section-table">로딩 중...</div>;
@@ -119,7 +141,8 @@ const NoticePage = () => {
                 rows={rows}
                 searchConfig={searchConfig}
                 labelConfig={labelConfig}
-                writeFunc={() => window.location.href = '/admin/notice/write'} />
+                writeFunc={() => window.location.href = '/admin/notice/write'}
+                deleteFunc={handleDelete} />
         </div>
     );
 };
