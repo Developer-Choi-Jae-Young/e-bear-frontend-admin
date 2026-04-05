@@ -10,7 +10,7 @@ const NoticeWrite = () => {
     const onClickEvent = async () => {
         try {
             const response = await api.post(
-                "/write",
+                "/notification/write",
                 {
                     title,
                     content,

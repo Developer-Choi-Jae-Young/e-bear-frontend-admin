@@ -2,24 +2,6 @@ import "./NoticeDetail.css";
 import { AuthorIcon, CalendarIcon, EyeIcon } from "../components/CustomTag";
 
 const NoticeDetail = () => {
-    let navigation = [
-        { subject: 'HOME', url: '/admin/home' },
-        { subject: 'HOME', url: '/admin/home' },
-        { subject: 'HOME', url: '/admin/home' },
-        { subject: 'HOME', url: '/admin/home' },
-        { subject: 'HOME', url: '/admin/home' },
-        { subject: 'HOME', url: '/admin/home' }
-    ];
-
-    let userInfo = {
-        name: '이베어',
-        email: 'ebear@knou.ac.kr'
-    }
-
-    let notice = {
-        content: '[알림] [안내] 공식대행사 대행관 설정 가이드 공지 및 불법영업 행위 주의 안내'
-    }
-
     let contents = `내용입니다.내용입니다.내용입니다.내용입니다.내용입니다.내용입니다.내용입니다.내용입니다.
     내용입니다.내용입니다.내용입니다.내용입니다.내용입니다.내용입니다.내용입니다.내용입니다.내용입니다.내용입니다.
     내용입니다.내용입니다.내용입니다.내용입니다.내용입니다.내용입니다.내용입니다.내용입니다.내용입니다.내용입니다.

@@ -78,7 +78,7 @@ const NoticePage = () => {
             setLoading(true);
             setError("");
 
-            const response = await api.get("/list");
+            const response = await api.get("/notification/list");
 
             const mappedRows = response.map((item) => ({
                 num: item.notificationNo,
@@ -114,7 +114,7 @@ const NoticePage = () => {
         if (!confirmed) return;
 
         try {
-            await api.post("/delete", selectedIds);
+            await api.post("/notification/delete", selectedIds);
             alert("삭제되었습니다.");
             fetchNoticeList();
         } catch (err) {
