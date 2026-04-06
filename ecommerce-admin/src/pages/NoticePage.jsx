@@ -1,9 +1,11 @@
 import "./NoticePage.css";
 import api from "../api/axios";
+import { useNavigate } from "react-router-dom";
 import DataTable from "../components/DataTable";
 import { useEffect, useState } from "react";
 
 const NoticePage = () => {
+    const navigate = useNavigate();
     const [rows, setRows] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -80,7 +82,7 @@ const NoticePage = () => {
 
             const response = await api.get("/notification/list");
 
-            const mappedRows = response.map((item) => ({
+            const mappedRows = response.data.map((item) => ({
                 num: item.notificationNo,
                 subject: item.title,
                 writer: item.writer,
@@ -141,7 +143,7 @@ const NoticePage = () => {
                 rows={rows}
                 searchConfig={searchConfig}
                 labelConfig={labelConfig}
-                writeFunc={() => window.location.href = '/admin/notice/write'}
+                writeFunc={() => navigate('/notice/write')}
                 deleteFunc={handleDelete} />
         </div>
     );

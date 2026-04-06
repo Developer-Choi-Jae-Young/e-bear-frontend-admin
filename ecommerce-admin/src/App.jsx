@@ -17,7 +17,7 @@ import Login from './pages/Login'
 import CommonError from './pages/commonError';
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   let userInfo = {
     name: '이베어',
