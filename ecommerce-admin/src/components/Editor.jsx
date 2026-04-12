@@ -11,9 +11,25 @@ import { Table } from "@tiptap/extension-table";
 import { TableRow } from "@tiptap/extension-table/row";
 import { TableHeader } from "@tiptap/extension-table/header";
 import { TableCell } from "@tiptap/extension-table/cell";
+import axios from '../api/axios';
 import { AlignLeftIcon, AlignCenterIcon, AlignRightIcon, LinkIcon, ImageIcon, OrderedListIcon, BulletListIcon } from './CustomTag';
 
+const uploadImage = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
 
+    try {
+        const response = await axios.post('/product/image/upload', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data', 
+            }
+        });
+        return response.data.url;
+    } catch (error) {
+        console.error("Upload failed", error);
+        return null;
+    }
+};
 
 const MenuBar = ({ editor }) => {
     if (!editor) return null;
@@ -94,13 +110,6 @@ const MenuBar = ({ editor }) => {
         }
 
         editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
-    };
-
-    const addImage = () => {
-        const url = window.prompt('이미지 URL을 입력하세요');
-        if (!url) return;
-
-        editor.chain().focus().setImage({ src: url }).run();
     };
 
     return (
@@ -250,13 +259,6 @@ const MenuBar = ({ editor }) => {
             >
                 <LinkIcon className="toolbar-icon" />
             </button>
-            <button
-                type="button"
-                className="editor-btn"
-                onClick={addImage}
-            >
-                <ImageIcon className="toolbar-icon" />
-            </button>
 
             <span className="toolbar-divider" />
 
@@ -299,7 +301,7 @@ const Editor = ({ value = '', onChange }) => {
             Link.configure({
                 openOnClick: false,
             }),
-            Image,
+            Image.configure({ allowBase64: true }),
             TextAlign.configure({
                 types: ['heading', 'paragraph'],
             }),
@@ -315,6 +317,44 @@ const Editor = ({ value = '', onChange }) => {
         onUpdate: ({ editor }) => {
             onChange?.(editor.getHTML());
         },
+        editorProps: {
+            handlePaste: (view, event) => {
+                const items = Array.from(event.clipboardData?.items || []);
+                const imageItem = items.find(item => item.type.indexOf('image') !== -1);
+        
+                if (imageItem) {
+                    const file = imageItem.getAsFile();
+                    uploadImage(file).then(url => {
+                        if (url && view.state.schema.nodes.image) { // image 노드가 있는지 확인
+                            const node = view.state.schema.nodes.image.create({ src: url });
+                            const transaction = view.state.tr.replaceSelectionWith(node);
+                            view.dispatch(transaction);
+                        }
+                    }).catch(err => console.error("Paste upload failed", err));
+                    return true; 
+                }
+                return false;
+            },
+            handleDrop: (view, event) => {
+                const files = Array.from(event.dataTransfer?.files || []);
+                const imageFile = files.find(file => file.type.startsWith('image/'));
+        
+                if (imageFile) {
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    uploadImage(imageFile).then(url => {
+                        if (url && view.state.schema.nodes.image) {
+                            const node = view.state.schema.nodes.image.create({ src: url });
+                            const transaction = view.state.tr.replaceSelectionWith(node);
+                            view.dispatch(transaction);
+                        }
+                    }).catch(err => console.error("Drop upload failed", err));
+                    return true;
+                }
+                return false;
+            }
+        }
     });
 
     useEffect(() => { console.log(editor); console.log(editor.getAttributes('link')) }, [editor]);
