@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import "./ProductRegister.css";
 import Editor from "../components/Editor";
 import { CameraIcon, CloseIcon } from "../components/CustomTag";
@@ -9,6 +9,7 @@ import Select from '@mui/material/Select';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
+import api from "../api/axios";
 
 const ProductRegister = () => {
     let titleInfo = {
@@ -18,6 +19,8 @@ const ProductRegister = () => {
     // 이미지 목록 상태 관리 (최대 5개)
     const [images, setImages] = useState([]);
     const fileInputRef = useRef(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
 
     // 이미지 추가
     const handleImageChange = (e) => {
@@ -53,9 +56,29 @@ const ProductRegister = () => {
         fileInputRef.current.click();
     };
 
+    const [categoryList, setCategoryList] = useState([]);
+    const [selectedPath, setSelectedPath] = useState([]);
+    const [stateList ,setStateList] = useState([]);
     const [category, setCategory] = useState('');
+    const [content, setContent] = useState('');
+    const [title, setTitle] = useState('');
+    const [deliveryPrice, setDeliveryPrice] = useState('');
+    const [deliveryDays, setDeliveryDays] = useState('');
     const categoryChange = (event) => {
         setCategory(event.target.value);
+    };
+    
+    const handleCategoryChange = (level, event) => {
+        const selectedId = event.target.value;
+        const currentList = level === 0 
+            ? categoryList : selectedPath[level - 1].childCategory;
+    
+        const selectedObj = currentList.find(item => item.categoryId === selectedId);
+        const newPath = selectedPath.slice(0, level);
+        newPath[level] = selectedObj;
+        
+        setSelectedPath(newPath);
+        setCategory(selectedId); 
     };
 
     const [saleStatus, setSaleStatus] = useState('');
@@ -64,8 +87,7 @@ const ProductRegister = () => {
     };
 
     const [optionInputs, setOptionInputs] = useState([
-        // 처음에 1줄은 무조건 표시
-        { id: Date.now() }
+        { id: Date.now(), productOptionName: '', productOptionValue: '', productPrice: 0, quantity: 0 }
     ]);
 
     // + 버튼 새로운 줄 추가
@@ -82,6 +104,91 @@ const ProductRegister = () => {
             alert("최소 하나의 옵션은 입력해야 합니다.");
         }
     };
+
+    const handleOptionChange = (id, field, value) => {
+        setOptionInputs(prev => prev.map(item => 
+            item.id === id ? { ...item, [field]: value } : item
+        ));
+    };
+
+    const handleWrite = async () => { 
+        const formData = new FormData();
+
+        const productData = {
+            productName: title,
+            description: "", 
+            deliveryPrice: deliveryPrice, 
+            deliveryDays: deliveryDays,
+            productStatus: saleStatus,
+            categoryId: category,
+            title: title,
+            content: content,
+            productOptions: optionInputs.map(opt => ({
+                productOptionName: opt.productOptionName,
+                productOptionValue: opt.productOptionValue,
+                productPrice: opt.productPrice,
+                quantity: opt.quantity
+            }))
+        };
+
+        formData.append("productSaveDto", new Blob([JSON.stringify(productData)], {
+            type: "application/json"
+        }));
+    
+        images.forEach((img) => {
+            formData.append("files", img.file);
+        });
+
+        try {
+            const response = await api.post("/product/save", formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data"
+                }
+            });
+            alert("등록 성공!");
+        } catch (err) {
+            console.error("등록 실패", err);
+        }
+    }
+
+    const fetchCategoryList = async () => {
+        try {
+            setLoading(true);
+            setError("");
+
+            const response = await api.get("/category/list");
+            setCategoryList(response.data);
+        } catch (err) {
+            console.error("카테고리 목록 조회 실패:", err);
+            console.error("status:", err.response?.status);
+            console.error("data:", err.response?.data);
+            setError("카테고리 목록을 불러오지 못했습니다.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchStateList = async () => {
+        try {
+            setLoading(true);
+            setError("");
+
+            const response = await api.get("/etc/proudct/state/list");
+            setStateList(response.data);
+        } catch (err) {
+            console.error("상태 목록 조회 실패:", err);
+            console.error("status:", err.response?.status);
+            console.error("data:", err.response?.data);
+            setError("상태 목록을 불러오지 못했습니다.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchCategoryList();
+        fetchStateList();
+    }, []);
 
     return (
         <div className='main-section'>
@@ -111,21 +218,39 @@ const ProductRegister = () => {
                     </div>
                 ))}
             </div>
+            <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+                <FormControl variant="standard" sx={{ minWidth: 120 }}>
+                    <InputLabel>대분류</InputLabel>
+                    <Select
+                        value={selectedPath[0]?.categoryId || ''}
+                        onChange={(e) => handleCategoryChange(0, e)}
+                    >
+                        {categoryList.map(data => (
+                            <MenuItem key={data.categoryId} value={data.categoryId}>
+                                {data.categoryName}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
 
-            <FormControl variant="standard" sx={{ mr: 1, minWidth: 120 }}>
-                <InputLabel id="demo-simple-select-standard-label">카테고리</InputLabel>
-                <Select
-                    labelId="demo-simple-select-standard-label"
-                    id="demo-simple-select-standard"
-                    value={category}
-                    onChange={categoryChange}
-                    label="카테고리"
-                >
-                    <MenuItem value={1}>카테고리1</MenuItem>
-                    <MenuItem value={2}>카테고리2</MenuItem>
-                    <MenuItem value={3}>카테고리3</MenuItem>
-                </Select>
-            </FormControl>
+                {selectedPath.map((item, index) => (
+                    item.childCategory && item.childCategory.length > 0 && (
+                        <FormControl key={`select-${index}`} variant="standard" sx={{ minWidth: 120 }}>
+                            <InputLabel>하위 카테고리</InputLabel>
+                            <Select
+                                value={selectedPath[index + 1]?.categoryId || ''}
+                                onChange={(e) => handleCategoryChange(index + 1, e)}
+                            >
+                                {item.childCategory.map(child => (
+                                    <MenuItem key={child.categoryId} value={child.categoryId}>
+                                        {child.categoryName}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    )
+                ))}
+            </Box>
 
             <FormControl variant="standard" sx={{ mr: 1, minWidth: 120 }}>
                 <InputLabel id="demo-simple-select-standard-label">판매상태</InputLabel>
@@ -136,22 +261,23 @@ const ProductRegister = () => {
                     onChange={saleStatusChange}
                     label="판매상태"
                 >
-                    <MenuItem value={1}>판매상태1</MenuItem>
-                    <MenuItem value={2}>판매상태2</MenuItem>
-                    <MenuItem value={3}>판매상태3</MenuItem>
+                    {stateList.map(data => {
+                        return <MenuItem value={data.stateCode}>{data.stateName}</MenuItem>
+                    })}
                 </Select>
             </FormControl>
-            <TextField label="₩ 가격을 입력해주세요." variant="standard" sx={{ mr: 1, width: 200 }} />
+            <TextField label="₩ 배송비를 입력해주세요." variant="standard" sx={{ mr: 1, width: 200 }} onChange={(e) => setDeliveryPrice(e.target.value)}/>
+            <TextField label="배송일 입력해주세요." variant="standard" sx={{ mr: 1, width: 200 }} onChange={(e) => setDeliveryDays(e.target.value)}/>
 
             {optionInputs.map((item, index) => (
                 <Box
                     key={item.id}
                     sx={{ display: 'flex', alignItems: 'flex-end', gap: 1, flexWrap: 'wrap', mb: 2 }}
                 >
-                    <TextField label="옵션명을 입력해주세요." variant="standard" sx={{ width: 150 }} />
-                    <TextField label="옵션값을 입력해주세요." variant="standard" sx={{ width: 150 }} />
-                    <TextField label="옵션가격을 입력해주세요." variant="standard" sx={{ width: 180 }} />
-                    <TextField label="재고수량을 입력해주세요." variant="standard" type="number" sx={{ width: 180 }} />
+                    <TextField label="옵션명을 입력해주세요." variant="standard" sx={{ width: 150 }} onChange={(e) => handleOptionChange(item.id, 'productOptionName', e.target.value)}/>
+                    <TextField label="옵션값을 입력해주세요." variant="standard" sx={{ width: 150 }} onChange={(e) => handleOptionChange(item.id, 'productOptionValue', e.target.value)}/>
+                    <TextField label="옵션가격을 입력해주세요." variant="standard" sx={{ width: 180 }} onChange={(e) => handleOptionChange(item.id, 'productPrice', parseInt(e.target.value) || 0)}/>
+                    <TextField label="재고수량을 입력해주세요." variant="standard" type="number" sx={{ width: 180 }} onChange={(e) => handleOptionChange(item.id, 'quantity', parseInt(e.target.value) || 0)}/>
 
                     {/* index가 마지막(length - 1)일 때만 버튼 표시 */}
                     {index === optionInputs.length - 1 && (
@@ -196,15 +322,16 @@ const ProductRegister = () => {
                         <input
                             className="editor-title-input"
                             placeholder="제목을 입력해주세요"
+                            onChange={(e) => setTitle(e.target.value)}
                         />
 
                         {/* 에디터 */}
-                        <Editor />
+                        <Editor value={content} onChange={setContent} />
 
                         {/* 버튼 영역 */}
                         <div className="editor-actions">
                             <button className="btn cancel">취소</button>
-                            <button className="btn submit">등록</button>
+                            <button className="btn submit" onClick={handleWrite}>등록</button>
                         </div>
                     </div>
                 </div>

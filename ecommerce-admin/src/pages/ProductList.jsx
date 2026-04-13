@@ -1,43 +1,17 @@
 import "./ProductList.css";
-import Button from '@mui/material/Button';
-import SideNavigation from "../components/SideNavigation";
-import Header from "../components/Header";
+import api from "../api/axios";
 import DataTable from "../components/DataTable";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Button from '@mui/material/Button';
 
-const generateDummyRows = (count) => {
-    const data = [];
-    for (let i = 1; i <= count; i++) {
-        const day = i < 10 ? `0${i}` : `${i}`;
-        const year = 2024;
-        const month = (i % 12) + 1;
-        const monthStr = month < 10 ? `0${month}` : `${month}`;
 
-        const saleStatus = ['판매중', '판매완료'];
-        const randomIndex = Math.floor(Math.random() * saleStatus.length);
-        const saleStatusValue = saleStatus[randomIndex];
-        const price = 100000;
+const ProductList = () => {
+    const navigate = useNavigate();
+    const [rows, setRows] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
 
-        data.push({
-            num: i,
-            subject: `상품관리 제목 ${i}입니다.`,
-            writer: `관리자${i % 5 + 1}`,
-            price: price.toLocaleString(),
-            regDt: `${year}-${monthStr}-${day}`,
-            viewCnt: Math.floor(Math.random() * 500) + 50,
-            testNum: Math.floor(Math.random() * 100) + 1,
-            saleStatusValue: saleStatusValue,
-            modifyBtn: (
-                <Button variant="outlined" sx={{ backgroundColor: '#000', color: 'white' }}>수정하기</Button>
-            ),
-        });
-    }
-    return data.reverse(); // 역순으로 정렬
-};
-
-// 더미 데이터 갯수 할당 및 생성 
-const rows = generateDummyRows(50);
-
-const NoticePage = () => {
     let navigation = [
         { subject: 'HOME', url: '/admin/home' },
         { subject: 'HOME', url: '/admin/home' },
@@ -98,21 +72,7 @@ const NoticePage = () => {
             label: '제품명',
             width: 200,
             align: 'center',
-        }, {
-            id: 'testNum',
-            numeric: false,
-            disablePadding: false,
-            label: '남은수량',
-            width: 50,
-            align: 'center',
-        }, {
-            id: 'price',
-            numeric: false,
-            disablePadding: false,
-            label: '금액',
-            width: 90,
-            align: 'center',
-        }, {
+        },{
             id: 'writer',
             numeric: false,
             disablePadding: false,
@@ -143,13 +103,53 @@ const NoticePage = () => {
         }
     ];
 
+    const fetchProductList = async () => {
+        try {
+            setLoading(true);
+            setError("");
+
+            const response = await api.get("/product/list");
+            const mappedRows = response.data.map((item) => ({
+                num: item.productId,
+                subject: item.productName,
+                writer: item.seller,
+                regDt: item.regDttm,
+                saleStatusValue: item.productStatus,
+                modifyBtn: (
+                    <Button variant="outlined" sx={{ backgroundColor: '#000', color: 'white' }}>수정하기</Button>
+                ),
+            }));
+
+            setRows(mappedRows);
+        } catch (err) {
+            console.error("상품 목록 조회 실패:", err);
+            console.error("status:", err.response?.status);
+            console.error("data:", err.response?.data);
+            setError("상품 목록을 불러오지 못했습니다.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchProductList();
+    }, []);
+
+    if (loading) {
+        return <div className="notice-main-section-table">로딩 중...</div>;
+    }
+
+    if (error) {
+        return <div className="notice-main-section-table">{error}</div>;
+    }
+
     return (
         // <span className="notice-main-section-title">{titleInfo.title}</span>
         //             <hr />
         <div className = "notice-main-section-table" >
-            <DataTable pageInfo={pageInfo} headCells={headCells} rows={rows} searchConfig={searchConfig} labelConfig={labelConfig} writeFunc={() => console.log('글쓰기 버튼')}/>
+            <DataTable pageInfo={pageInfo} headCells={headCells} rows={rows} searchConfig={searchConfig} labelConfig={labelConfig} writeFunc={() => navigate('/product/write')}/>
         </div >
     );
 };
 
-export default NoticePage;
+export default ProductList;

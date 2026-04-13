@@ -27,7 +27,7 @@ function App() {
   let navigation = [
     { subject: 'HOME', url: '/home' },
     { subject: '공지사항', url: '/notice' },
-    { subject: '상품관리', url: '/proudct' },
+    { subject: '상품관리', url: '/product' },
     { subject: '회원목록', url: '/member' },
     { subject: '주문목록', url: '/order' },
     { subject: '문의목록', url: '/inquiry' }
