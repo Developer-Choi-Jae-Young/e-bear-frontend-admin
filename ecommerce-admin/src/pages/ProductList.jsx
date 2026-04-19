@@ -152,7 +152,7 @@ const ProductList = () => {
         // <span className="notice-main-section-title">{titleInfo.title}</span>
         //             <hr />
         <div className = "notice-main-section-table" >
-            <DataTable pageInfo={pageInfo} headCells={headCells} rows={rows} searchConfig={searchConfig} labelConfig={labelConfig} writeFunc={() => navigate('/product/write')} selectFunc={selectProduct}/>
+            <DataTable pageInfo={pageInfo} headCells={headCells} rows={rows} searchConfig={searchConfig} labelConfig={labelConfig} writeFunc={() => navigate('/product/write')} detailFunc={selectProduct}/>
         </div >
     );
 };

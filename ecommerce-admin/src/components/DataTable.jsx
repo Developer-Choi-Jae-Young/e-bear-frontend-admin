@@ -79,7 +79,7 @@ function DataTableHead(props) {
   );
 }
 
-export default function DataTableTable({ pageInfo, headCells, rows, searchConfig, labelConfig, writeFunc, deleteFunc, selectFunc }) {
+export default function DataTableTable({ pageInfo, headCells, rows, searchConfig, labelConfig, writeFunc, deleteFunc, detailFunc }) {
   const [order, setOrder] = React.useState('asc'); //정렬방향
   const [orderBy, setOrderBy] = React.useState('num'); //정렬기준
   const [selected, setSelected] = React.useState([]); //체크박스 선택값
@@ -247,7 +247,6 @@ export default function DataTableTable({ pageInfo, headCells, rows, searchConfig
                       key={row.num}
                       selected={isItemSelected}
                       sx={{ cursor: 'pointer' }}
-                      onClick={() => selectFunc(row.num)}
                     >
                       <TableCell padding="checkbox">
                         <Checkbox
@@ -273,7 +272,24 @@ export default function DataTableTable({ pageInfo, headCells, rows, searchConfig
                             maxWidth: headCell.width,
                           }}
                         >
-                          {renderCellValue(row[headCell.id])}
+                          {headCell.id === "subject" ? (
+                            <button
+                              type="button"
+                              onClick={() => detailFunc(row.num)}
+                              style={{
+                                border: "none",
+                                background: "transparent",
+                                padding: 0,
+                                cursor: "pointer",
+                                font: "inherit",
+                                textAlign: "left"
+                              }}
+                            >
+                              {renderCellValue(row[headCell.id])}
+                            </button>
+                          ) : (
+                            renderCellValue(row[headCell.id])
+                          )}
                         </TableCell>
                       ))}
                     </TableRow>
