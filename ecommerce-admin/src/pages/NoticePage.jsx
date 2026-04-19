@@ -127,6 +127,10 @@ const NoticePage = () => {
         }
     };
 
+    const handleDetail = (notificationNo) => {
+        navigate(`/notice/detail/${notificationNo}`);
+    }
+
     if (loading) {
         return <div className="notice-main-section-table">로딩 중...</div>;
     }
@@ -144,7 +148,8 @@ const NoticePage = () => {
                 searchConfig={searchConfig}
                 labelConfig={labelConfig}
                 writeFunc={() => navigate('/notice/write')}
-                deleteFunc={handleDelete} />
+                deleteFunc={handleDelete}
+                detailFunc={handleDetail} />
         </div>
     );
 };

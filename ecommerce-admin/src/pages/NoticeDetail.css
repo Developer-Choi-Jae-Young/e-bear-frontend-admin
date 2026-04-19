@@ -80,6 +80,17 @@
     background-color: #000000;
   }
 
+  .notice-btn-list {
+    background-color: #000000;
+    color: white;
+    border-color: #000000;
+  }
+
+  .notice-btn-list:hover {
+    background-color: #000000;
+  }
+
+
   .post-meta-container {
     display: flex;
     align-items: center;

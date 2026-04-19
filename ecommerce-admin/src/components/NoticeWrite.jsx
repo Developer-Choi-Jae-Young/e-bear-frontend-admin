@@ -2,8 +2,10 @@ import "./NoticeWrite.css";
 import Editor from "./Editor";
 import api from "../api/axios";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const NoticeWrite = () => {
+    const navigate = useNavigate();
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
 
@@ -17,7 +19,8 @@ const NoticeWrite = () => {
                 }
             );
 
-            console.log("등록 성공:", response.data);
+            alert("공지사항이 등록되었습니다.");
+            navigate("/notice");
         } catch (err) {
             console.error("등록 실패:", err);
             console.error(err.response?.status);
@@ -45,7 +48,10 @@ const NoticeWrite = () => {
 
                     {/* 버튼 영역 */}
                     <div className="editor-actions">
-                        <button className="btn cancel">취소</button>
+                        <button
+                            className="btn cancel"
+                            onClick={() => navigate("/notice")}
+                        >취소</button>
                         <button onClick={onClickEvent} className="btn submit">등록</button>
                     </div>
                 </div>
