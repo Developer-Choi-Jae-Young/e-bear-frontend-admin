@@ -179,7 +179,7 @@ const OrderListPage = () => {
   return (
     <>
       <div className="order-main-section-table">
-        <DataTable pageInfo={pageInfo} headCells={headCells} rows={rows} searchConfig={searchConfig} labelConfig={labelConfig} writeFunc={() => console.log('글쓰기 버튼')}/>
+        <DataTable pageInfo={pageInfo} headCells={headCells} rows={rows} searchConfig={searchConfig} labelConfig={labelConfig} writeFunc={() => console.log('글쓰기 버튼')} selectFunc={() => console.log('')}/>
       </div>
       <PopUp
         isOpen={isOpen}

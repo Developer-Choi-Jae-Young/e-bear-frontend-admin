@@ -4,6 +4,7 @@ import DataTable from "../components/DataTable";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from '@mui/material/Button';
+import { func } from "prop-types";
 
 
 const ProductList = () => {
@@ -131,6 +132,10 @@ const ProductList = () => {
         }
     };
 
+    function selectProduct(key) {
+        location.href='http://localhost:5174/user/product/view/' + key
+    }
+
     useEffect(() => {
         fetchProductList();
     }, []);
@@ -147,7 +152,7 @@ const ProductList = () => {
         // <span className="notice-main-section-title">{titleInfo.title}</span>
         //             <hr />
         <div className = "notice-main-section-table" >
-            <DataTable pageInfo={pageInfo} headCells={headCells} rows={rows} searchConfig={searchConfig} labelConfig={labelConfig} writeFunc={() => navigate('/product/write')}/>
+            <DataTable pageInfo={pageInfo} headCells={headCells} rows={rows} searchConfig={searchConfig} labelConfig={labelConfig} writeFunc={() => navigate('/product/write')} selectFunc={selectProduct}/>
         </div >
     );
 };

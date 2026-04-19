@@ -150,7 +150,7 @@ const CustomerInquiryListPage = () => {
         // <span className="inquiry-main-section-title">고객문의</span>
         // <hr />
         <div className="inquiry-main-section-table">
-            <DataTable pageInfo={pageInfo} headCells={headCells} rows={rows} searchConfig={searchConfig} labelConfig={labelConfig} writeFunc={() => console.log('글쓰기 버튼')}/>
+            <DataTable pageInfo={pageInfo} headCells={headCells} rows={rows} searchConfig={searchConfig} labelConfig={labelConfig} writeFunc={() => console.log('글쓰기 버튼')} selectFunc={() => console.log('')}/>
         </div>
     );
 };
