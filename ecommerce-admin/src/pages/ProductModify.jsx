@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import "./ProductRegister.css";
+import "./ProductModify.css";
 import Editor from "../components/Editor";
 import { CameraIcon, CloseIcon } from "../components/CustomTag";
 import InputLabel from '@mui/material/InputLabel';
@@ -10,8 +10,11 @@ import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import api from "../api/axios";
+import { useParams } from 'react-router-dom';
 
-const ProductRegister = () => {
+const ProductModify = () => {
+    const { id } = useParams();
+
     let titleInfo = {
         title: '상품관리'
     }
@@ -21,6 +24,7 @@ const ProductRegister = () => {
     const fileInputRef = useRef(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [product, setProduct] = useState(null);
 
     // 이미지 추가
     const handleImageChange = (e) => {
@@ -111,84 +115,110 @@ const ProductRegister = () => {
         ));
     };
 
-    const handleWrite = async () => { 
+    const handleUpdate = async () => { 
         const formData = new FormData();
 
         const productData = {
+            productId: id,
             productName: title,
-            description: "", 
-            deliveryPrice: deliveryPrice, 
+            deliveryPrice: deliveryPrice,
             deliveryDays: deliveryDays,
             productStatus: saleStatus,
             categoryId: category,
-            title: title,
             content: content,
-            productOptions: optionInputs.map(opt => ({
-                productOptionName: opt.productOptionName,
-                productOptionValue: opt.productOptionValue,
-                productPrice: opt.productPrice,
-                quantity: opt.quantity
-            }))
+            productOptions: optionInputs,
         };
 
-        formData.append("productSaveDto", new Blob([JSON.stringify(productData)], {
+        formData.append("productUpdateDto", new Blob([JSON.stringify(productData)], {
             type: "application/json"
         }));
-    
-        images.forEach((img) => {
+
+        images.filter(img => !img.isExisting).forEach((img) => {
             formData.append("files", img.file);
         });
 
         try {
-            const response = await api.post("/product/save", formData, {
+            const response = await api.post("/product/update", formData, {
                 headers: {
                     "Content-Type": "multipart/form-data"
                 }
             });
-            alert("등록 성공!");
+            alert("수정 성공!");
         } catch (err) {
-            console.error("등록 실패", err);
+            console.error("수정 실패", err);
         }
     }
 
-    const fetchCategoryList = async () => {
-        try {
-            setLoading(true);
-            setError("");
-
-            const response = await api.get("/category/list");
-            setCategoryList(response.data);
-        } catch (err) {
-            console.error("카테고리 목록 조회 실패:", err);
-            console.error("status:", err.response?.status);
-            console.error("data:", err.response?.data);
-            setError("카테고리 목록을 불러오지 못했습니다.");
-        } finally {
-            setLoading(false);
+    const findCategoryInList = (list, id) => {
+        for (let cat of list) {
+            if (cat.categoryId === id) return cat;
+            if (cat.childCategory) {
+                const found = findCategoryInList(cat.childCategory, id);
+                if (found) return found;
+            }
         }
-    };
-
-    const fetchStateList = async () => {
-        try {
-            setLoading(true);
-            setError("");
-
-            const response = await api.get("/etc/product/state/list");
-            setStateList(response.data);
-        } catch (err) {
-            console.error("상태 목록 조회 실패:", err);
-            console.error("status:", err.response?.status);
-            console.error("data:", err.response?.data);
-            setError("상태 목록을 불러오지 못했습니다.");
-        } finally {
-            setLoading(false);
-        }
+        return null;
     };
 
     useEffect(() => {
-        fetchCategoryList();
-        fetchStateList();
-    }, []);
+        const initData = async () => {
+            try {
+                setLoading(true);
+    
+                const catRes = await api.get("/category/list");
+                const stateRes = await api.get("/etc/product/state/list");
+    
+                setCategoryList(catRes.data);
+                setStateList(stateRes.data);
+
+                if (id) {
+                    const prodRes = await api.get(`/product/detail/${id}`);
+                    const data = prodRes.data;
+                    console.log(data);
+                    setTitle(data.productName);
+                    setContent(data.content);
+                    setDeliveryPrice(data.deliveryPrice);
+                    setDeliveryDays(data.deliveryDays);
+                    setSaleStatus(data.productStatus);
+                    setCategory(data.category.categoryId);
+    
+                    const path = [];
+                    let currentCat = data.category;
+                    while (currentCat) {
+                        const fullCatObj = findCategoryInList(catRes.data, currentCat.categoryId);
+                        if (fullCatObj) path.unshift(fullCatObj);
+                        currentCat = currentCat.child;
+                    }
+                    setSelectedPath(path);
+
+                    if (data.productOptions) {
+                        setOptionInputs(data.productOptions.map(opt => ({
+                            id: opt.productOptionId,
+                            productOptionName: opt.productOptionName,
+                            productOptionValue: opt.productOptionValue,
+                            productPrice: opt.productOptionPrice,
+                            quantity: opt.productOptionInventory
+                        })));
+                    }
+                    if (data.productImages) {
+                        setImages(data.productImages.map(img => ({
+                            file: null,
+                            preview: img.imageUrl,
+                            isExisting: true,
+                            imageId: img.imageId
+                        })));
+                    }
+                }
+            } catch (err) {
+                console.error("데이터 로드 중 에러 발생:", err);
+                setError("데이터를 불러오지 못했습니다.");
+            } finally {
+                setLoading(false);
+            }
+        };
+    
+        initData();
+    }, [id]);
 
     return (
         <div className='main-section'>
@@ -266,18 +296,18 @@ const ProductRegister = () => {
                     })}
                 </Select>
             </FormControl>
-            <TextField label="₩ 배송비를 입력해주세요." variant="standard" sx={{ mr: 1, width: 200 }} onChange={(e) => setDeliveryPrice(e.target.value)}/>
-            <TextField label="배송일 입력해주세요." variant="standard" sx={{ mr: 1, width: 200 }} onChange={(e) => setDeliveryDays(e.target.value)}/>
+            <TextField label="₩ 배송비를 입력해주세요." variant="standard" sx={{ mr: 1, width: 200 }} value={deliveryPrice} onChange={(e) => setDeliveryPrice(e.target.value)}/>
+            <TextField label="배송일 입력해주세요." variant="standard" sx={{ mr: 1, width: 200 }} value={deliveryDays} onChange={(e) => setDeliveryDays(e.target.value)}/>
 
             {optionInputs.map((item, index) => (
                 <Box
                     key={item.id}
                     sx={{ display: 'flex', alignItems: 'flex-end', gap: 1, flexWrap: 'wrap', mb: 2 }}
                 >
-                    <TextField label="옵션명을 입력해주세요." variant="standard" sx={{ width: 150 }} onChange={(e) => handleOptionChange(item.id, 'productOptionName', e.target.value)}/>
-                    <TextField label="옵션값을 입력해주세요." variant="standard" sx={{ width: 150 }} onChange={(e) => handleOptionChange(item.id, 'productOptionValue', e.target.value)}/>
-                    <TextField label="옵션가격을 입력해주세요." variant="standard" sx={{ width: 180 }} onChange={(e) => handleOptionChange(item.id, 'productPrice', parseInt(e.target.value) || 0)}/>
-                    <TextField label="재고수량을 입력해주세요." variant="standard" type="number" sx={{ width: 180 }} onChange={(e) => handleOptionChange(item.id, 'quantity', parseInt(e.target.value) || 0)}/>
+                    <TextField label="옵션명을 입력해주세요." variant="standard" sx={{ width: 150 }} value={item.productOptionName || ''} onChange={(e) => handleOptionChange(item.id, 'productOptionName', e.target.value)}/>
+                    <TextField label="옵션값을 입력해주세요." variant="standard" sx={{ width: 150 }} value={item.productOptionValue || ''} onChange={(e) => handleOptionChange(item.id, 'productOptionValue', e.target.value)}/>
+                    <TextField label="옵션가격을 입력해주세요." variant="standard" sx={{ width: 180 }} value={item.productPrice || ''} onChange={(e) => handleOptionChange(item.id, 'productPrice', parseInt(e.target.value) || 0)}/>
+                    <TextField label="재고수량을 입력해주세요." variant="standard" type="number" sx={{ width: 180 }} value={item.quantity || ''} onChange={(e) => handleOptionChange(item.id, 'quantity', parseInt(e.target.value) || 0)}/>
 
                     {/* index가 마지막(length - 1)일 때만 버튼 표시 */}
                     {index === optionInputs.length - 1 && (
@@ -322,6 +352,7 @@ const ProductRegister = () => {
                         <input
                             className="editor-title-input"
                             placeholder="제목을 입력해주세요"
+                            value={title}
                             onChange={(e) => setTitle(e.target.value)}
                         />
 
@@ -331,7 +362,7 @@ const ProductRegister = () => {
                         {/* 버튼 영역 */}
                         <div className="editor-actions">
                             <button className="btn cancel">취소</button>
-                            <button className="btn submit" onClick={handleWrite}>등록</button>
+                            <button className="btn submit" onClick={handleUpdate}>수정</button>
                         </div>
                     </div>
                 </div>
@@ -340,4 +371,4 @@ const ProductRegister = () => {
     );
 };
 
-export default ProductRegister;
+export default ProductModify;

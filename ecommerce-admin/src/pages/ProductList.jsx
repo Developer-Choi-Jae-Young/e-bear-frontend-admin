@@ -4,7 +4,6 @@ import DataTable from "../components/DataTable";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from '@mui/material/Button';
-import { func } from "prop-types";
 
 
 const ProductList = () => {
@@ -104,6 +103,10 @@ const ProductList = () => {
         }
     ];
 
+    function updateProduct(key) {
+        navigate('/product/modify/' + key);
+    }
+
     const fetchProductList = async () => {
         try {
             setLoading(true);
@@ -117,7 +120,7 @@ const ProductList = () => {
                 regDt: item.regDttm,
                 saleStatusValue: item.productStatus,
                 modifyBtn: (
-                    <Button variant="outlined" sx={{ backgroundColor: '#000', color: 'white' }}>수정하기</Button>
+                    <Button variant="outlined" sx={{ backgroundColor: '#000', color: 'white' }} onClick={() => updateProduct(item.productId)}>수정하기</Button>
                 ),
             }));
 
@@ -133,7 +136,7 @@ const ProductList = () => {
     };
 
     function selectProduct(key) {
-        location.href='http://localhost:5174/user/product/view/' + key
+        location.href= import.meta.env.VITE_USER_URL + '/product/view/' + key;
     }
 
     useEffect(() => {
